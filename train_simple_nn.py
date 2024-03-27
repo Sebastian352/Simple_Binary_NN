@@ -35,11 +35,13 @@ data = []
 labels = []
 
 imagePaths = sorted(list(paths.list_images(args["dataset"])))
-random.seed(42)
+random.seed(123)
 random.shuffle(imagePaths)
 
 for imagePath in imagePaths:
     image = cv2.imread(imagePath)
+
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image = cv2.resize(image, (32, 32)).flatten()
     data.append(image)
     label = imagePath.split(os.path.sep)[-2]
@@ -49,7 +51,7 @@ data = np.array(data, dtype="float") / 255.0
 label = np.array(labels)
 
 (trainX, testX, trainY, testY) = train_test_split(
-    data, labels, test_size=0.25, random_state=42
+    data, labels, test_size=0.25, random_state=123
 )
 
 lb = LabelBinarizer()
@@ -59,19 +61,24 @@ testY = lb.transform(testY)
 print(lb.classes_)
 
 model = Sequential()
-model.add(layers.Dense(1024, input_shape=(3072,), activation="sigmoid"))
-model.add(layers.Dense(512, activation="sigmoid"))
 
+model.add(layers.Dense(512, input_shape=(1024,), activation="relu"))
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(256, activation="relu"))
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(128, activation="relu"))
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(64, activation="relu"))
+model.add(layers.Dropout(0.5))
 model.add(layers.Dense(1, activation="sigmoid"))
-
 # We use this one in case we need to clasify more than one thing
 # model.add(layers.Dense(len(lb.classes_), activation="softmax"))
 
-INIT_LR = 0.01
+INIT_LR = 0.001
 EPOCHS = 80
 
 print("[INFO] training network...")
-opt = optimizers.SGD(learning_rate=INIT_LR)
+opt = optimizers.Adam(learning_rate=INIT_LR)
 
 # in case we need to classify more than one thing we swap binary_crossentropy with categorical_crossentropy
 model.compile(loss="binary_crossentropy", optimizer=opt, metrics=["accuracy"])
@@ -93,7 +100,6 @@ print(
         zero_division=1,
     )
 )
-print("crap")
 # plot the training loss and accuracy
 N = np.arange(0, EPOCHS)
 plt.style.use("ggplot")
