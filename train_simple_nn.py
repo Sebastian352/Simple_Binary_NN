@@ -59,13 +59,19 @@ testY = lb.transform(testY)
 model = Sequential()
 model.add(layers.Dense(1024, input_shape=(3072,), activation="sigmoid"))
 model.add(layers.Dense(512, activation="sigmoid"))
-model.add(layers.Dense(1, activation="sigmoid"))
+
+model.add(layers.Dense(1, activation="softmax"))
+
+# We use this one in case we need to clasify more than one thing
+# model.add(layers.Dense(len(lb.classes_), activation="softmax"))
 
 INIT_LR = 0.01
 EPOCHS = 80
 
 print("[INFO] training network...")
 opt = optimizers.SGD(learning_rate=INIT_LR)
+
+# in case we need to classify more than one thing we swap binary_crossentropy with categorical_crossentropy
 model.compile(loss="binary_crossentropy", optimizer=opt, metrics=["accuracy"])
 
 H = model.fit(
