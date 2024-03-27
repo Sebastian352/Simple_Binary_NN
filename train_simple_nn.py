@@ -56,11 +56,13 @@ lb = LabelBinarizer()
 trainY = lb.fit_transform(trainY)
 testY = lb.transform(testY)
 
+print(lb.classes_)
+
 model = Sequential()
 model.add(layers.Dense(1024, input_shape=(3072,), activation="sigmoid"))
 model.add(layers.Dense(512, activation="sigmoid"))
 
-model.add(layers.Dense(1, activation="softmax"))
+model.add(layers.Dense(1, activation="sigmoid"))
 
 # We use this one in case we need to clasify more than one thing
 # model.add(layers.Dense(len(lb.classes_), activation="softmax"))
@@ -81,12 +83,17 @@ H = model.fit(
 # evaluate the network
 print("[INFO] evaluating network...")
 predictions = model.predict(x=testX, batch_size=32)
+binary_predictions = np.round(predictions)
+
 print(
     classification_report(
-        testY.argmax(axis=1), predictions.argmax(axis=1), target_names=lb.classes_
+        testY.argmax(axis=1),
+        binary_predictions,
+        target_names=lb.classes_,
+        zero_division=1,
     )
 )
-
+print("crap")
 # plot the training loss and accuracy
 N = np.arange(0, EPOCHS)
 plt.style.use("ggplot")
